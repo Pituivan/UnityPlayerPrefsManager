@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement name="horizontal-layout-group" style="flex-grow: 1; flex-direction: row; align-items: flex-start; align-content: auto;">
+        <ui:TextField placeholder-text="key" name="key-field" style="flex-direction: row-reverse; align-self: center; max-width: 35%;">
+            <ui:Label text="Type" name="type-label" style="padding-left: 2px; padding-top: 2px; padding-right: 0; margin-right: 2px; color: rgb(196, 196, 196); text-overflow: ellipsis; overflow: hidden; width: 40px;" />
+        </ui:TextField>
+        <ui:IntegerField value="0" name="value-field" style="align-self: center; max-width: 60%;" />
+        <ui:FloatField value="0" name="value-field" style="align-self: center; max-width: 60%;" />
+        <ui:TextField placeholder-text="value" name="value-field" multiline="true" vertical-scroller-visibility="Auto" style="text-overflow: clip; align-self: center; max-width: 60%;" />
+    </ui:VisualElement>
+</ui:UXML>
