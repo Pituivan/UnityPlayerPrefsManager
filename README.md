@@ -1,5 +1,5 @@
 # Code Utils for Unity
-Provides an Editor Window for managing player prefs directly from the editor.
+Provides an Editor Window for managing Player Prefs directly from the editor.
 
 ## Installation 💾
 To install the package using the Unity Package Manager:
