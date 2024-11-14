@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Pituivan.EditorTools.PlayerPrefsManager
 {
-    [FilePath("Packages/Player Prefs Manager/Data", FilePathAttribute.Location.ProjectFolder)]
+    [FilePath("ProjectSettings/Packages/Pituivan/Player Prefs Manager", FilePathAttribute.Location.ProjectFolder)]
     internal class RegisteredPlayerPrefs : ScriptableSingleton<RegisteredPlayerPrefs>
     {
         // ----- Serialized Fields
