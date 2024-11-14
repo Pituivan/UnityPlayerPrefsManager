@@ -2,7 +2,7 @@
 	"name": "com.pituivan.playerprefsmanager",
 	"version": "1.0.0",
 	"displayName": "Player Prefs Manager",
-	"description": "Provides an Editor Window for managing player prefs directly from the editor.",
+	"description": "Provides an Editor Window for managing Player Prefs directly from the editor.",
 	"author": {
 		"name": "Pituivan",
 		"email": "pituivandev@gmail.com"
