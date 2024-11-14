@@ -1,4 +1,4 @@
-# Code Utils for Unity
+# Unity Player Prefs Manager
 Provides an Editor Window for managing Player Prefs directly from the editor.
 
 ## Installation 💾
