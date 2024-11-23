@@ -32,11 +32,12 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
 
         // ----- Serialized Fields
 
-        [SerializeField] private VisualTreeAsset visualTree;
+        [SerializeField] private VisualTreeAsset ui;
+        [SerializeField] private VisualTreeAsset noPlayerPrefsMsg;
 
         // ----- Private Fields
 
-        private static readonly IReadOnlyDictionary<Type, string> typeNamesMapping = new Dictionary<Type, string>()
+        private static readonly IReadOnlyDictionary<Type, string> typeNamesMapping = new Dictionary<Type, string>
         {
             { typeof(int), "Int" },
             { typeof(float), "Float" },
@@ -55,7 +56,7 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
 
         void CreateGUI()
         {
-            rootVisualElement.Add(visualTree.Instantiate());
+            rootVisualElement.Add(ui.Instantiate());
             var listView = rootVisualElement.Q<ListView>();
 
             foreach (var playerPref in RegisteredPlayerPrefs.instance.PlayerPrefs)
@@ -67,7 +68,8 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             listView.bindItem = BindItem;
             listView.unbindItem = (_, i) => UnbindItem(i);
             listView.overridingAddButtonBehavior = (view, _) => OverrideAddBtnBehaviour(view);
-            listView.onRemove = RemoveItem;
+            listView.onRemove = DeleteItem;
+            listView.makeNoneElement = noPlayerPrefsMsg.Instantiate;
         }
 
         // ----- Private Methods
@@ -207,10 +209,12 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             view.ScrollToItem(items.Count - 1);
         }
 
-        private void RemoveItem(BaseListView view)
+        private void DeleteItem(BaseListView view)
         {
-            RegisteredPlayerPrefs.instance.PlayerPrefs.RemoveAt(items.Count - 1);
-            items.RemoveAt(items.Count - 1);
+            var itemToRemove = items[^1];
+            RegisteredPlayerPrefs.instance.PlayerPrefs.Remove(itemToRemove.Item1);
+            items.Remove(itemToRemove);
+            itemToRemove.Item1.Delete();
 
             ApplyChanges(view);
         }

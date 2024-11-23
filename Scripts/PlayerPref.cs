@@ -16,7 +16,7 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
         // ----- Private Fields
 
         private static readonly IReadOnlyDictionary<Type, (Func<string, object> Getter, Action<string, object> Setter)> getSetValueMapping =
-            new Dictionary<Type, (Func<string, object>, Action<string, object>)>()
+            new Dictionary<Type, (Func<string, object>, Action<string, object>)>
             {
                 { typeof(int), (key => GetInt(key), (key, value) => SetInt(key, (int)value)) },
                 { typeof(float), (key => GetFloat(key), (key, val) => SetFloat(key, (float)val)) },
@@ -76,5 +76,9 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             typeName = Type.FullName;
             this.key = key;
         }
+
+        // ----- Public Methods
+
+        public void Delete() => DeleteKey(key);
     }
 }
