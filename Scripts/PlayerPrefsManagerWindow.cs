@@ -97,7 +97,7 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
 
             EventCallback<FocusOutEvent> focusOutCallback = _ =>
             {
-                keyField.value = FilterKey(keyField.value, playerPref, alreadyRegistered: true);
+                keyField.value = FilterKey(keyField.value, playerPref.Type, alreadyRegistered: true);
                 playerPref.Key = keyField.value;
 
                 RegisteredPlayerPrefs.instance.Save();
@@ -107,9 +107,9 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             return new UnbindingHandle(() => keyField.UnregisterCallback(focusOutCallback));
         }
 
-        private string FilterKey(string input, PlayerPref playerPref, bool alreadyRegistered)
+        private string FilterKey(string input, Type playerPrefType, bool alreadyRegistered)
         {
-            if (string.IsNullOrEmpty(input)) input = DefaultKey(playerPref.Type);
+            if (string.IsNullOrEmpty(input)) input = DefaultKey(playerPrefType);
 
             var keys = (from item in items
                        select item.Item1.Key).ToList();
@@ -199,8 +199,12 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
 
         private void AddPlayerPref<T>(BaseListView view)
         {
-            var playerPref = new PlayerPref(DefaultKey(typeof(T)), default(T));
-            playerPref.Key = FilterKey(playerPref.Key, playerPref, alreadyRegistered: false);
+            string key = FilterKey(
+                input: null, 
+                playerPrefType: typeof(T),
+                alreadyRegistered: false
+                );
+            var playerPref = new PlayerPref(key, default(T));
 
             RegisteredPlayerPrefs.instance.PlayerPrefs.Add(playerPref);
             items.Add((playerPref, null));

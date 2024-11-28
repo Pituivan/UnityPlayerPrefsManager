@@ -69,12 +69,13 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
         {
             value ??= "value";
             Type = value.GetType();
-            Value = value;
 
             if (!getSetValueMapping.ContainsKey(Type)) throw new ArgumentException("Value type is not a valid type for a Player Pref!", nameof(value));
 
             typeName = Type.FullName;
             this.key = key;
+
+            Value = value;
         }
 
         // ----- Public Methods
