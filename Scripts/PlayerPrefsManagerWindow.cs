@@ -57,19 +57,19 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
         void CreateGUI()
         {
             rootVisualElement.Add(ui.Instantiate());
-            var listView = rootVisualElement.Q<ListView>();
+            var table = rootVisualElement.Q<MultiColumnListView>();
 
             foreach (var playerPref in RegisteredPlayerPrefs.instance.PlayerPrefs)
             {
                 items.Add((playerPref, null));
             }
 
-            listView.itemsSource = items;
-            listView.bindItem = BindItem;
-            listView.unbindItem = (_, i) => UnbindItem(i);
-            listView.overridingAddButtonBehavior = (view, _) => OverrideAddBtnBehaviour(view);
-            listView.onRemove = DeleteItem;
-            listView.makeNoneElement = noPlayerPrefsMsg.Instantiate;
+            table.itemsSource = items;
+            table.bindItem = BindItem;
+            table.unbindItem = (_, i) => UnbindItem(i);
+            table.overridingAddButtonBehavior = (view, _) => OverrideAddBtnBehaviour(view);
+            table.onRemove = DeleteItem;
+            table.makeNoneElement = noPlayerPrefsMsg.Instantiate;
         }
 
         // ----- Private Methods
@@ -77,10 +77,13 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
         private void BindItem(VisualElement ve, int index)
         {
             PlayerPref playerPref = items[index].Item1;
-            var keyField = ve.Q<TextField>("key-field");
 
+            ve.userData = playerPref;
+
+            var keyField = ve.Q<TextField>("key-field");
             UnbindingHandle keyUnbindingHandle = BindKey(keyField, playerPref);
             UnbindingHandle valueUnbindingHandle = BindValue(ve, playerPref);
+
             UnbindingHandle unbindingHandle = new(() =>
             {
                 keyUnbindingHandle.Unbind();

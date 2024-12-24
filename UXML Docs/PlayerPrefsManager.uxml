@@ -1,4 +1,10 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <engine:Label text="Player Prefs" style="-unity-font-style: bold; font-size: 25%; padding-top: 0; margin-top: 2px; margin-bottom: 2px; -unity-text-align: upper-center; background-image: none;" />
-    <engine:ListView horizontal-scrolling="false" virtualization-method="DynamicHeight" show-border="true" reorderable="true" show-add-remove-footer="true" reorder-mode="Animated" binding-source-selection-mode="AutoAssign" item-template="project://database/Assets/Repos/Player%20Prefs%20Manager/UXML%20Docs/SinglePlayerPref.uxml?fileID=9197481963319205126&amp;guid=e4de0931c790ead42ab9420ea7339476&amp;type=3#SinglePlayerPref" show-alternating-row-backgrounds="ContentOnly" style="margin-left: 1px; margin-right: 1px;" />
+    <engine:MultiColumnListView show-add-remove-footer="true" reorderable="true" horizontal-scrolling="true" show-border="true" virtualization-method="DynamicHeight" show-alternating-row-backgrounds="ContentOnly" reorder-mode="Animated" binding-source-selection-mode="AutoAssign">
+        <engine:Columns reorderable="false" resizable="true">
+            <engine:Column name="types" title="Type" sortable="false" optional="false" stretchable="true" />
+            <engine:Column title="Key" sortable="false" optional="false" stretchable="true" name="keys" />
+            <engine:Column name="values" title="Value" visible="true" stretchable="true" optional="false" />
+        </engine:Columns>
+    </engine:MultiColumnListView>
 </engine:UXML>
