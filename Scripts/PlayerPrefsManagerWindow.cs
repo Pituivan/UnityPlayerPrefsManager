@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -45,7 +46,7 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             { typeof(string), "String" }
         };
 
-        private readonly List<PlayerPref> playerPrefs = new();
+        private IList<PlayerPref> playerPrefs;
 
         // ----- Unity Callbacks
 
@@ -60,10 +61,9 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             rootVisualElement.Add(ui.Instantiate());
             var table = rootVisualElement.Q<MultiColumnListView>();
 
-            // Init `items` list from existing Player Prefs
-            table.itemsSource = new List<object>();
+            playerPrefs = PlayerPrefsReader.ListPlayerPrefs();
 
-            table.itemsSource = playerPrefs;
+            table.itemsSource = (IList)playerPrefs;
             table.makeNoneElement = noPlayerPrefsMsg.Instantiate;
             table.overridingAddButtonBehavior = (table, _) => AddBtnBehaviour(table);
             table.onRemove = RemoveLastPlayerPref;
