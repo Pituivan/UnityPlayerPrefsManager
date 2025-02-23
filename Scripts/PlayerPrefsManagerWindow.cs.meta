@@ -6,7 +6,9 @@ MonoImporter:
   defaultReferences:
   - m_ViewDataDictionary: {instanceID: 0}
   - ui: {fileID: 9197481963319205126, guid: 7b230cc08f5e31d42b8e850f9ede18f1, type: 3}
-  - playerPref: {fileID: 9197481963319205126, guid: e4de0931c790ead42ab9420ea7339476, type: 3}
+  - typeCell: {fileID: 9197481963319205126, guid: e02e74293f40cee41bd8a6bb5a822710, type: 3}
+  - keyCell: {fileID: 9197481963319205126, guid: 2b120d29d801af54ab32d43d4eb37fb8, type: 3}
+  - valueCell: {fileID: 9197481963319205126, guid: a4ecf1022fce0d64191b9f1609f68d6e, type: 3}
   - noPlayerPrefsMsg: {fileID: 9197481963319205126, guid: 92c19b9369ef7bc4395d2dfc101e53ac, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}

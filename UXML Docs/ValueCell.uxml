@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/Repos/Player%20Prefs%20Manager/USS%20Styles/Styles.uss?fileID=7433441132597879392&amp;guid=81cef36c55a52444ba1f72e04114148b&amp;type=3#Styles" />
+    <ui:IntegerField value="0" name="value-field" class="value-field" />
+    <ui:FloatField value="0" name="value-field" class="a" />
+    <ui:TextField placeholder-text="value" name="value-field" multiline="true" vertical-scroller-visibility="Auto" class="b" style="max-height: 55px;" />
+</ui:UXML>

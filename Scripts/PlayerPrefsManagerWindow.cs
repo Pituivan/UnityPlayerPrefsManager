@@ -33,18 +33,19 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
         // ----- Serialized Fields
 
         [SerializeField] private VisualTreeAsset ui;
+        [SerializeField] private VisualTreeAsset keyCell, valueCell;
         [SerializeField] private VisualTreeAsset noPlayerPrefsMsg;
 
         // ----- Private Fields
 
-        private static readonly IReadOnlyDictionary<Type, string> typeNamesMapping = new Dictionary<Type, string>
+        private static readonly IReadOnlyDictionary<Type, string> typeMapping = new Dictionary<Type, string>
         {
             { typeof(int), "Int" },
-            { typeof(float), "Float" },
+            { typeof(float), "Float "},
             { typeof(string), "String" }
         };
 
-        private readonly List<(PlayerPref, UnbindingHandle)> items = new();
+        private readonly List<PlayerPref> playerPrefs = new();
 
         // ----- Unity Callbacks
 
@@ -59,63 +60,73 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             rootVisualElement.Add(ui.Instantiate());
             var table = rootVisualElement.Q<MultiColumnListView>();
 
-            foreach (var playerPref in RegisteredPlayerPrefs.instance.PlayerPrefs)
-            {
-                items.Add((playerPref, null));
-            }
+            // Init `items` list from existing Player Prefs
+            table.itemsSource = new List<object>();
 
-            table.itemsSource = items;
-            table.bindItem = BindItem;
-            table.unbindItem = (_, i) => UnbindItem(i);
-            table.overridingAddButtonBehavior = (view, _) => OverrideAddBtnBehaviour(view);
-            table.onRemove = DeleteItem;
+            table.itemsSource = playerPrefs;
             table.makeNoneElement = noPlayerPrefsMsg.Instantiate;
+            table.overridingAddButtonBehavior = (table, _) => AddBtnBehaviour(table);
+            table.onRemove = RemoveLastPlayerPref;
+
+            Column typeColumn = table.columns["type"];
+            typeColumn.bindCell = BindTypeCell;
+
+            Column keyColumn = table.columns["key"];
+            keyColumn.makeCell = keyCell.Instantiate;
+            keyColumn.bindCell = BindKeyCell;
+            keyColumn.unbindCell = (cell, _) => UnbindCell(cell);
+            
+            Column valueColumn = table.columns["value"];
+            valueColumn.makeCell = valueCell.Instantiate;
+            valueColumn.bindCell = BindValueCell;
+            valueColumn.unbindCell = (cell, _) => UnbindCell(cell);
         }
 
         // ----- Private Methods
 
-        private void BindItem(VisualElement ve, int index)
+        private void AddBtnBehaviour(BaseListView table)
         {
-            PlayerPref playerPref = items[index].Item1;
+            var dropdownMenu = new GenericMenu();
 
-            ve.userData = playerPref;
-
-            var keyField = ve.Q<TextField>("key-field");
-            UnbindingHandle keyUnbindingHandle = BindKey(keyField, playerPref);
-            UnbindingHandle valueUnbindingHandle = BindValue(ve, playerPref);
-
-            UnbindingHandle unbindingHandle = new(() =>
+            void AddOptionForType<T>()
             {
-                keyUnbindingHandle.Unbind();
-                valueUnbindingHandle.Unbind();
-            });
+                string name = typeMapping[typeof(T)];
+                dropdownMenu.AddItem(
+                    content: new GUIContent(name),
+                    on: false,
+                    func: () => CreatePlayerPref<T>(table)
+                    );
+            }
 
-            items[index] = (playerPref, unbindingHandle);
+            AddOptionForType<int>();
+            AddOptionForType<float>();
+            AddOptionForType<string>();
+
+            var dropdownPos = new Rect(Event.current.mousePosition, Vector2.zero);
+            dropdownMenu.DropDown(dropdownPos);
         }
 
-        private UnbindingHandle BindKey(TextField keyField, PlayerPref playerPref)
+        private void CreatePlayerPref<T>(BaseListView table)
         {
-            keyField.Q<Label>("type-label").text = typeNamesMapping[playerPref.Type];
-            keyField.value = playerPref.Key;
+            string key = FilterKey(
+                input: null,
+                playerPrefType: typeof(T),
+                alreadyRegistered: false
+                );
+            var playerPref = new PlayerPref(key, default(T));
 
-            EventCallback<FocusOutEvent> focusOutCallback = _ =>
-            {
-                keyField.value = FilterKey(keyField.value, playerPref.Type, alreadyRegistered: true);
-                playerPref.Key = keyField.value;
+            playerPrefs.Add(playerPref);
 
-                RegisteredPlayerPrefs.instance.Save();
-            };
-
-            keyField.RegisterCallback(focusOutCallback);
-            return new UnbindingHandle(() => keyField.UnregisterCallback(focusOutCallback));
+            table.RefreshItems();
+            table.ScrollToItem(playerPrefs.Count - 1);
         }
 
         private string FilterKey(string input, Type playerPrefType, bool alreadyRegistered)
         {
             if (string.IsNullOrEmpty(input)) input = DefaultKey(playerPrefType);
 
-            var keys = (from item in items
-                       select item.Item1.Key).ToList();
+            var keys = (from item in playerPrefs
+                        select item.Key).ToList();
             if (alreadyRegistered)
             {
                 keys.Remove(input);
@@ -137,99 +148,87 @@ namespace Pituivan.EditorTools.PlayerPrefsManager
             return output;
         }
 
-        private string DefaultKey(Type playerPrefType) => $"My{typeNamesMapping[playerPrefType]}";
+        private string DefaultKey(Type playerPrefType) => $"My{typeMapping[playerPrefType]}";
 
-        private UnbindingHandle BindValue(VisualElement ve, PlayerPref playerPref)
+        private void RemoveLastPlayerPref(BaseListView table)
         {
-            UnbindingHandle BindValue<T>(BaseField<T> valueField) => this.BindValue<T>(ve, valueField, playerPref);
+            var lastPlayerPref = playerPrefs[^1];
 
-            return playerPref.Type switch
-            {
-                Type type when type == typeof(int) => BindValue(ve.Q<IntegerField>()),
-                var t when t == typeof(float) => BindValue(ve.Q<FloatField>()),
-                var t when t == typeof(string) => BindValue(ve.Q<TextField>("value-field")),
-                _ => throw new ArgumentNullException($"Player Pref type is null; it is not initialized!")
-            };
+            playerPrefs.Remove(lastPlayerPref);
+            lastPlayerPref.Delete();
+
+            table.RefreshItems();
         }
 
-        private UnbindingHandle BindValue<T>(VisualElement ve, BaseField<T> valueField, PlayerPref playerPref)
+        private void BindTypeCell(VisualElement cell, int index)
         {
-            foreach (var field in ve.Query("value-field").Build())
+            var typeLabel = cell.Q<Label>();
+            PlayerPref playerPref = playerPrefs[index];
+
+            typeLabel.text = typeMapping[playerPref.Type];
+        }
+
+        private void BindKeyCell(VisualElement cell, int index)
+        {
+            var keyField = cell.Q<TextField>();
+            PlayerPref playerPref = playerPrefs[index];
+
+            EventCallback<FocusOutEvent> saveKeyCallback = _ =>
+            {
+                keyField.value = FilterKey(keyField.value, playerPref.Type, alreadyRegistered: true);
+                playerPref.Key = keyField.value;
+            };
+            BindCallback(keyField, saveKeyCallback);
+        }
+
+        private void BindCallback<T>(VisualElement target, EventCallback<T> callback) where T : EventBase<T>, new()
+        {
+            target.RegisterCallback(callback);
+
+            var unbindingHandle = new UnbindingHandle(unbind: () => target.UnregisterCallback(callback));
+            target.userData = unbindingHandle;
+        }
+
+        private void UnbindCell(VisualElement cell)
+        {
+            foreach (VisualElement element in cell.Query().Build())
+            {
+                if (element.userData is UnbindingHandle unbindingHandle)
+                {
+                    unbindingHandle.Unbind();
+                }
+            }
+        }
+
+        private void BindValueCell(VisualElement cell, int index)
+        {
+            PlayerPref playerPref = playerPrefs[index];
+
+            Action<VisualElement, PlayerPref> bindValueField = playerPref.Type switch
+            {
+                Type type when type == typeof(int) => BindValueField<int>,
+                var t when t == typeof(float) => BindValueField<float>,
+                var t when t == typeof(string) => BindValueField<string>,
+                _ => throw new ArgumentNullException($"Player Pref type is null; it is not initialized!")
+            };
+            bindValueField.Invoke(cell, playerPref);
+        }
+
+        private void BindValueField<T>(VisualElement cell, PlayerPref playerPref)
+        {
+            var targetValueField = cell.Q<BaseField<T>>();
+            var valueFields = cell.Query("value-field").Build();
+
+            foreach (var field in valueFields)
             {
                 field.style.display = DisplayStyle.None;
             }
-            valueField.style.display = DisplayStyle.Flex;
+            targetValueField.style.display = DisplayStyle.Flex;
 
-            valueField.value = (T)playerPref.Value;
+            targetValueField.value = (T)playerPref.Value;
 
-            EventCallback<ChangeEvent<T>> valueChangedCallback = evt =>
-            {
-                playerPref.Value = evt.newValue;
-            };
-
-            valueField.RegisterValueChangedCallback(valueChangedCallback);
-            return new UnbindingHandle(() => valueField.UnregisterValueChangedCallback(valueChangedCallback));
-        }
-
-        private void UnbindItem(int index)
-        {
-            if (index < items.Count)
-            {
-                items[index].Item2?.Unbind();
-            }
-        }
-
-        private void OverrideAddBtnBehaviour(BaseListView view)
-        {
-            var dropdownMenu = new GenericMenu();
-
-            void AddOptionForType<T>()
-            {
-                string name = typeNamesMapping[typeof(T)];
-                dropdownMenu.AddItem(
-                    content: new GUIContent(name),
-                    on: false,
-                    func: () => AddPlayerPref<T>(view)
-                    );
-            }
-
-            AddOptionForType<int>();
-            AddOptionForType<float>();
-            AddOptionForType<string>();
-
-            dropdownMenu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-        }
-
-        private void AddPlayerPref<T>(BaseListView view)
-        {
-            string key = FilterKey(
-                input: null, 
-                playerPrefType: typeof(T),
-                alreadyRegistered: false
-                );
-            var playerPref = new PlayerPref(key, default(T));
-
-            RegisteredPlayerPrefs.instance.PlayerPrefs.Add(playerPref);
-            items.Add((playerPref, null));
-
-            ApplyChanges(view);
-            view.ScrollToItem(items.Count - 1);
-        }
-
-        private void DeleteItem(BaseListView view)
-        {
-            var itemToRemove = items[^1];
-            RegisteredPlayerPrefs.instance.PlayerPrefs.Remove(itemToRemove.Item1);
-            items.Remove(itemToRemove);
-            itemToRemove.Item1.Delete();
-
-            ApplyChanges(view);
-        }
-
-        private void ApplyChanges(BaseListView view)
-        {
-            RegisteredPlayerPrefs.instance.Save();
-            view.RefreshItems();
+            EventCallback<ChangeEvent<T>> editValueCallback = evt => playerPref.Value = evt.newValue;
+            BindCallback(targetValueField, editValueCallback);
         }
     }
 }
